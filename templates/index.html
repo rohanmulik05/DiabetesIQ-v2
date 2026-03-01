@@ -1,0 +1,1538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DiabetesIQ · Dual Model System</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Syne+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #070d1a;
+  --surface: #0e1726;
+  --surface2: #152035;
+  --border: #1c2e4a;
+  --border2: #243650;
+  --accent-c: #38bdf8;   /* clinical — sky blue */
+  --accent-l: #a78bfa;   /* lifestyle — violet */
+  --accent-e: #34d399;   /* ensemble — emerald */
+  --danger: #f87171;
+  --warn: #fbbf24;
+  --text: #e2eeff;
+  --muted: #4a6080;
+  --muted2: #6b88a8;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  min-height: 100vh;
+}
+
+/* ── Animated background ── */
+body::before {
+  content:'';
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(ellipse 60% 40% at 10% 20%, rgba(56,189,248,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 35% at 85% 75%, rgba(167,139,250,0.06) 0%, transparent 55%);
+  pointer-events:none;
+  z-index:0;
+}
+
+body::after {
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:
+    linear-gradient(rgba(56,189,248,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56,189,248,0.025) 1px, transparent 1px);
+  background-size:48px 48px;
+  pointer-events:none;
+  z-index:0;
+}
+
+.app {
+  position:relative;
+  z-index:1;
+  max-width:1280px;
+  margin:0 auto;
+  padding:32px 24px 80px;
+}
+
+/* ── Header ── */
+.header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:40px;
+  flex-wrap:wrap;
+  gap:16px;
+}
+
+.brand {
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.brand-name {
+  font-size:1.8rem;
+  font-weight:800;
+  letter-spacing:-1px;
+  background: linear-gradient(90deg, var(--accent-c), var(--accent-l));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+
+.brand-sub {
+  font-family:'Syne Mono', monospace;
+  font-size:0.6rem;
+  letter-spacing:0.2em;
+  color:var(--muted);
+  text-transform:uppercase;
+}
+
+.header-right {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.model-pill {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 14px;
+  border-radius:100px;
+  font-family:'Syne Mono',monospace;
+  font-size:0.65rem;
+  letter-spacing:0.1em;
+  border:1px solid var(--border2);
+  background:var(--surface);
+}
+
+.model-pill .dot {
+  width:7px;height:7px;
+  border-radius:50%;
+  animation:blink 2s infinite;
+}
+
+.dot-c { background:var(--accent-c); box-shadow:0 0 6px var(--accent-c); }
+.dot-l { background:var(--accent-l); box-shadow:0 0 6px var(--accent-l); animation-delay:0.5s; }
+.dot-off { background:var(--muted); box-shadow:none; animation:none; }
+
+@keyframes blink {
+  0%,100%{opacity:1} 50%{opacity:0.3}
+}
+
+/* ── Tabs ── */
+.tabs {
+  display:flex;
+  gap:4px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:5px;
+  margin-bottom:32px;
+  width:fit-content;
+}
+
+.tab {
+  padding:10px 22px;
+  border-radius:10px;
+  font-size:0.78rem;
+  font-weight:600;
+  letter-spacing:0.04em;
+  cursor:pointer;
+  transition:all 0.2s;
+  color:var(--muted2);
+  border:none;
+  background:transparent;
+  font-family:'Syne',sans-serif;
+}
+
+.tab:hover { color:var(--text); }
+
+.tab.active-c {
+  background:rgba(56,189,248,0.12);
+  color:var(--accent-c);
+  box-shadow:0 0 0 1px rgba(56,189,248,0.25);
+}
+
+.tab.active-l {
+  background:rgba(167,139,250,0.12);
+  color:var(--accent-l);
+  box-shadow:0 0 0 1px rgba(167,139,250,0.25);
+}
+
+.tab.active-e {
+  background:rgba(52,211,153,0.12);
+  color:var(--accent-e);
+  box-shadow:0 0 0 1px rgba(52,211,153,0.25);
+}
+
+/* ── Section display ── */
+.section { display:none; }
+.section.visible { display:block; }
+
+/* ── Main layout ── */
+.main-grid {
+  display:grid;
+  grid-template-columns:1fr 360px;
+  gap:24px;
+  align-items:start;
+}
+
+@media(max-width:960px){
+  .main-grid{grid-template-columns:1fr;}
+}
+
+/* ── Cards ── */
+.card {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:28px;
+  position:relative;
+  overflow:hidden;
+}
+
+.card-glow-c::before {
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent-c),transparent);
+  opacity:0.5;
+}
+
+.card-glow-l::before {
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent-l),transparent);
+  opacity:0.5;
+}
+
+.card-glow-e::before {
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent-e),transparent);
+  opacity:0.5;
+}
+
+.card-label {
+  font-family:'Syne Mono',monospace;
+  font-size:0.6rem;
+  letter-spacing:0.2em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:22px;
+}
+
+/* ── Input grid ── */
+.inputs-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px;
+}
+
+@media(max-width:600px){.inputs-grid{grid-template-columns:1fr;}}
+
+.field {
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+}
+
+.field-label {
+  font-family:'Syne Mono',monospace;
+  font-size:0.6rem;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:var(--muted2);
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.range-hint {
+  font-size:0.55rem;
+  color:var(--border2);
+  margin-left:auto;
+}
+
+input[type="number"] {
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:11px 14px;
+  color:var(--text);
+  font-family:'Syne Mono',monospace;
+  font-size:0.9rem;
+  outline:none;
+  transition:border-color 0.2s,box-shadow 0.2s;
+  -moz-appearance:textfield;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;}
+input[type="number"]:focus {
+  border-color:var(--accent-c);
+  box-shadow:0 0 0 3px rgba(56,189,248,0.08);
+}
+input[type="number"].lf:focus {
+  border-color:var(--accent-l);
+  box-shadow:0 0 0 3px rgba(167,139,250,0.08);
+}
+input[type="number"].filled { border-color:rgba(56,189,248,0.3); }
+input[type="number"].filled.lf { border-color:rgba(167,139,250,0.3); }
+
+input[type="range"] {
+  width:100%;
+  -webkit-appearance:none;
+  height:3px;
+  border-radius:2px;
+  background:var(--border);
+  outline:none;
+  cursor:pointer;
+  margin-top:4px;
+}
+input[type="range"].c::-webkit-slider-thumb {
+  -webkit-appearance:none;width:13px;height:13px;border-radius:50%;
+  background:var(--accent-c);box-shadow:0 0 6px var(--accent-c);cursor:pointer;
+  transition:transform 0.1s;
+}
+input[type="range"].l::-webkit-slider-thumb {
+  -webkit-appearance:none;width:13px;height:13px;border-radius:50%;
+  background:var(--accent-l);box-shadow:0 0 6px var(--accent-l);cursor:pointer;
+  transition:transform 0.1s;
+}
+input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.4);}
+
+/* ── Toggle grid ── */
+.toggles-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+@media(max-width:600px){.toggles-grid{grid-template-columns:1fr;}}
+
+.toggle-field {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:10px 14px;
+  cursor:pointer;
+  transition:border-color 0.15s, background 0.15s;
+  user-select:none;
+}
+
+.toggle-field:hover { border-color:var(--border2); }
+.toggle-field.on {
+  background:rgba(167,139,250,0.07);
+  border-color:rgba(167,139,250,0.3);
+}
+
+.toggle-name {
+  font-size:0.7rem;
+  font-weight:600;
+  color:var(--muted2);
+  transition:color 0.15s;
+}
+
+.toggle-field.on .toggle-name { color:var(--accent-l); }
+
+.toggle-switch {
+  width:34px;height:18px;
+  background:var(--border2);
+  border-radius:9px;
+  position:relative;
+  transition:background 0.2s;
+  flex-shrink:0;
+}
+
+.toggle-switch::after {
+  content:'';
+  position:absolute;
+  width:12px;height:12px;
+  border-radius:50%;
+  background:var(--muted);
+  top:3px;left:3px;
+  transition:transform 0.2s, background 0.2s;
+}
+
+.toggle-field.on .toggle-switch { background:rgba(167,139,250,0.3); }
+.toggle-field.on .toggle-switch::after {
+  transform:translateX(16px);
+  background:var(--accent-l);
+}
+
+/* Gender select */
+.gender-select {
+  display:flex;
+  gap:8px;
+}
+
+.gender-btn {
+  flex:1;
+  padding:10px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:var(--surface2);
+  color:var(--muted2);
+  font-family:'Syne',sans-serif;
+  font-size:0.75rem;
+  font-weight:600;
+  cursor:pointer;
+  transition:all 0.15s;
+}
+
+.gender-btn.active-male {
+  background:rgba(167,139,250,0.1);
+  border-color:var(--accent-l);
+  color:var(--accent-l);
+}
+
+.gender-btn.active-female {
+  background:rgba(167,139,250,0.1);
+  border-color:var(--accent-l);
+  color:var(--accent-l);
+}
+
+/* ── Buttons ── */
+.predict-btn {
+  width:100%;
+  margin-top:24px;
+  padding:15px;
+  border:none;
+  border-radius:12px;
+  font-family:'Syne',sans-serif;
+  font-size:0.8rem;
+  font-weight:700;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:all 0.2s;
+  position:relative;
+  overflow:hidden;
+}
+
+.predict-btn.c { background:var(--accent-c); color:var(--bg); }
+.predict-btn.l { background:var(--accent-l); color:var(--bg); }
+.predict-btn.e {
+  background:linear-gradient(90deg,var(--accent-c),var(--accent-l));
+  color:var(--bg);
+}
+
+.predict-btn:hover { transform:translateY(-2px); filter:brightness(1.1); }
+.predict-btn:active { transform:translateY(0); }
+
+.predict-btn.loading::after {
+  content:'';
+  position:absolute;left:-100%;top:0;width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.25),transparent);
+  animation:shimmer 0.9s infinite;
+}
+
+@keyframes shimmer{to{left:100%;}}
+
+.reset-btn {
+  width:100%;margin-top:8px;
+  padding:9px;
+  background:transparent;
+  border:1px solid var(--border);
+  border-radius:10px;
+  color:var(--muted);
+  font-family:'Syne',sans-serif;
+  font-size:0.7rem;
+  cursor:pointer;
+  transition:all 0.2s;
+}
+.reset-btn:hover{border-color:var(--muted2);color:var(--text);}
+
+/* ── Result column ── */
+.results-col {
+  display:flex;
+  flex-direction:column;
+  gap:20px;
+}
+
+/* ── Gauge ── */
+.gauge-card { text-align:center; padding:28px; }
+
+.gauge-wrap {
+  position:relative;
+  width:180px;height:96px;
+  margin:0 auto 16px;
+}
+
+.gauge-svg { width:180px;height:96px; }
+.g-track { fill:none;stroke:var(--border);stroke-width:10;stroke-linecap:round; }
+.g-arc {
+  fill:none;stroke-width:10;stroke-linecap:round;
+  stroke-dasharray:220;stroke-dashoffset:220;
+  transition:stroke-dashoffset 0.9s cubic-bezier(0.4,0,0.2,1),stroke 0.4s;
+}
+.g-needle {
+  transform-origin:90px 90px;
+  transform:rotate(-90deg);
+  transition:transform 0.9s cubic-bezier(0.4,0,0.2,1),stroke 0.4s;
+}
+
+.gauge-pct {
+  font-size:2.4rem;
+  font-weight:800;
+  line-height:1;
+  transition:color 0.4s;
+  color:var(--accent-c);
+}
+
+.gauge-lbl {
+  font-family:'Syne Mono',monospace;
+  font-size:0.58rem;
+  letter-spacing:0.18em;
+  color:var(--muted);
+  text-transform:uppercase;
+  margin-top:3px;
+}
+
+.risk-badge {
+  display:inline-block;
+  padding:5px 16px;
+  border-radius:100px;
+  font-size:0.68rem;
+  font-weight:700;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  margin-top:10px;
+  transition:all 0.4s;
+  background:rgba(56,189,248,0.1);
+  color:var(--accent-c);
+  border:1px solid rgba(56,189,248,0.2);
+}
+
+/* ── Bars ── */
+.bar-list { display:flex;flex-direction:column;gap:11px; }
+
+.bar-row {
+  display:flex;align-items:center;gap:10px;
+}
+
+.bar-name {
+  font-family:'Syne Mono',monospace;
+  font-size:0.58rem;
+  color:var(--muted2);
+  width:96px;flex-shrink:0;
+  letter-spacing:0.06em;
+}
+
+.bar-bg {
+  flex:1;height:5px;
+  background:var(--border);
+  border-radius:3px;overflow:hidden;
+}
+
+.bar-fill {
+  height:100%;border-radius:3px;
+  width:0%;
+  transition:width 0.9s cubic-bezier(0.4,0,0.2,1);
+}
+
+.bar-pct {
+  font-family:'Syne Mono',monospace;
+  font-size:0.58rem;
+  color:var(--muted);
+  width:28px;text-align:right;
+}
+
+/* ── Dual score (ensemble) ── */
+.dual-scores {
+  display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;
+}
+
+.score-box {
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:16px 12px;
+  text-align:center;
+}
+
+.score-box-label {
+  font-family:'Syne Mono',monospace;
+  font-size:0.55rem;
+  letter-spacing:0.15em;
+  color:var(--muted);
+  text-transform:uppercase;
+  margin-bottom:8px;
+}
+
+.score-box-val {
+  font-size:1.6rem;
+  font-weight:800;
+  transition:color 0.4s;
+}
+
+.score-box-tag {
+  font-size:0.6rem;
+  font-weight:700;
+  margin-top:4px;
+  transition:color 0.4s;
+}
+
+/* ── History ── */
+.history-list {
+  display:flex;flex-direction:column;gap:8px;
+  max-height:200px;overflow-y:auto;
+}
+
+.history-list::-webkit-scrollbar{width:3px;}
+.history-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+.h-item {
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 12px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:8px;
+  font-family:'Syne Mono',monospace;
+  font-size:0.6rem;
+  animation:fadeUp 0.3s ease;
+}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+
+.h-tag {
+  font-weight:700;font-size:0.65rem;
+}
+
+.empty {
+  text-align:center;
+  color:var(--muted);
+  font-family:'Syne Mono',monospace;
+  font-size:0.65rem;
+  padding:16px;
+}
+
+/* ── Upload / status banner ── */
+.banner {
+  display:flex;align-items:center;gap:10px;
+  padding:12px 18px;
+  border-radius:12px;
+  font-family:'Syne Mono',monospace;
+  font-size:0.68rem;
+  margin-bottom:28px;
+}
+
+.banner.warn {
+  background:rgba(251,191,36,0.08);
+  border:1px solid rgba(251,191,36,0.2);
+  color:var(--warn);
+}
+
+.banner.ok {
+  background:rgba(52,211,153,0.08);
+  border:1px solid rgba(52,211,153,0.2);
+  color:var(--accent-e);
+}
+
+/* tooltip */
+.tip {
+  display:inline-flex;align-items:center;justify-content:center;
+  width:13px;height:13px;border-radius:50%;
+  background:var(--border2);
+  color:var(--muted2);font-size:0.5rem;cursor:help;
+  position:relative;
+}
+
+.tip:hover::after {
+  content:attr(data-tip);
+  position:absolute;bottom:120%;left:50%;transform:translateX(-50%);
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:6px;padding:5px 8px;font-size:0.58rem;
+  white-space:nowrap;z-index:20;color:var(--text);pointer-events:none;
+  font-family:'Syne Mono',monospace;
+}
+
+.section-title {
+  font-size:1.1rem;
+  font-weight:700;
+  margin-bottom:20px;
+  display:flex;align-items:center;gap:10px;
+}
+
+.section-title .dot-big {
+  width:10px;height:10px;border-radius:50%;
+}
+
+/* ── Error msg ── */
+.err-msg {
+  display:none;
+  font-family:'Syne Mono',monospace;
+  font-size:0.62rem;
+  color:var(--danger);
+  margin-top:10px;
+  padding:8px 12px;
+  background:rgba(248,113,113,0.08);
+  border-radius:8px;
+  border:1px solid rgba(248,113,113,0.2);
+}
+
+.disclaimer {
+  font-family:'Syne Mono',monospace;
+  font-size:0.58rem;
+  color:var(--muted);
+  text-align:center;
+  line-height:1.7;
+  margin-top:14px;
+}
+
+/* ══════════════════════════════════════════
+   MOBILE RESPONSIVE
+   ══════════════════════════════════════════ */
+
+/* ── Tablet (≤768px) ── */
+@media(max-width:768px) {
+  .app { padding:20px 16px 100px; }
+  .header { margin-bottom:24px; gap:12px; }
+  .brand-name { font-size:1.4rem; }
+  .header-right { width:100%; justify-content:flex-start; }
+  .model-pill { font-size:0.6rem; padding:5px 10px; }
+
+  /* Tabs: sticky top bar, full width */
+  .tabs {
+    position:sticky;
+    top:0;
+    z-index:100;
+    background:rgba(14,23,38,0.96);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--border);
+    border-radius:0;
+    margin-left:-16px;
+    margin-right:-16px;
+    margin-bottom:20px;
+    padding:6px 16px;
+    width:calc(100% + 32px);
+    border-left:none; border-right:none; border-top:none;
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:4px;
+  }
+  .tab { padding:10px 6px; font-size:0.7rem; text-align:center; letter-spacing:0.01em; }
+
+  .card { padding:18px 16px; border-radius:12px; }
+  .gauge-card { padding:20px 16px; }
+  .banner { font-size:0.6rem; padding:10px 14px; flex-wrap:wrap; }
+  .section-title { font-size:0.95rem; }
+
+  /* Combined two-col → single col */
+  .combined-body { grid-template-columns:1fr; }
+  .combined-col:first-child { border-right:none; border-bottom:1px solid var(--border); }
+  .combined-col { padding:14px 16px; }
+
+  .score-box { padding:12px 10px; }
+  .score-box-val { font-size:1.3rem; }
+
+  .gauge-wrap { width:160px; height:82px; margin-bottom:12px; }
+  .gauge-svg { width:160px; height:82px; }
+  .gauge-pct { font-size:2rem; }
+
+  .h-item { flex-direction:column; align-items:flex-start; gap:4px; }
+  .h-tag { align-self:flex-end; }
+}
+
+/* ── Mobile (≤480px) ── */
+@media(max-width:480px) {
+  .app { padding:16px 12px 90px; }
+  .tabs { margin-left:-12px; margin-right:-12px; width:calc(100% + 24px); padding:6px 12px; }
+  .tab { font-size:0.65rem; padding:9px 4px; }
+
+  .brand-name { font-size:1.2rem; }
+  .brand-sub { font-size:0.52rem; }
+  .model-pill { font-size:0.55rem; padding:4px 8px; }
+  .model-pill .dot { width:6px; height:6px; }
+
+  .card { padding:14px 12px; border-radius:10px; }
+  .card-label { font-size:0.55rem; margin-bottom:14px; }
+
+  .inputs-grid { gap:12px; }
+  input[type="number"] { padding:13px 12px; font-size:0.85rem; }
+  input[type="range"] { height:4px; margin-top:6px; }
+  input[type="range"].c::-webkit-slider-thumb,
+  input[type="range"].l::-webkit-slider-thumb { width:18px; height:18px; }
+
+  .toggles-grid { gap:7px; }
+  .toggle-field { padding:9px 12px; }
+  .toggle-name { font-size:0.66rem; }
+  .gender-btn { padding:11px 8px; font-size:0.72rem; }
+
+  .gauge-wrap { width:140px; height:72px; }
+  .gauge-svg { width:140px; height:72px; }
+  .gauge-pct { font-size:1.8rem; }
+  .gauge-lbl { font-size:0.52rem; }
+  .risk-badge { font-size:0.6rem; padding:4px 12px; }
+
+  .predict-btn { padding:14px; font-size:0.75rem; margin-top:18px; }
+  .reset-btn { padding:10px; font-size:0.65rem; }
+
+  .score-box-val { font-size:1.15rem; }
+  .score-box-label { font-size:0.5rem; }
+  .dual-scores { gap:8px; }
+
+  .bar-name { width:70px; font-size:0.53rem; }
+  .bar-pct { font-size:0.53rem; width:22px; }
+
+  .section-title { font-size:0.85rem; }
+  .banner { font-size:0.56rem; }
+  .disclaimer { font-size:0.52rem; }
+  .err-msg { font-size:0.58rem; }
+
+  /* Tooltips: stay on screen */
+  .tip:hover::after { left:0; transform:translateX(0); white-space:normal; width:150px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="brand">
+      <div class="brand-name">DiabetesIQ</div>
+      <div class="brand-sub">Dual Model Prediction System · v2.0</div>
+    </div>
+    <div class="header-right">
+      <div class="model-pill">
+        <div class="dot dot-c" id="status-c-dot"></div>
+        <span id="status-c-txt">Clinical Model</span>
+      </div>
+      <div class="model-pill">
+        <div class="dot dot-l" id="status-l-dot"></div>
+        <span id="status-l-txt">Lifestyle Model</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Model status banner -->
+  <div class="banner warn" id="model-banner">
+    ⚠ Models not detected — place <strong>clinical_model.pkl</strong> and <strong>lifestyle_model.pkl</strong> in the <code>/models</code> folder, then run <code>python app.py</code>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active-c" onclick="switchTab('clinical')">🔬 Clinical</button>
+    <button class="tab" onclick="switchTab('lifestyle')">🏃 Lifestyle</button>
+    <button class="tab" onclick="switchTab('combined')">⚡ Combined</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       CLINICAL TAB
+  ═══════════════════════════════════════════ -->
+  <div class="section visible" id="tab-clinical">
+    <div class="main-grid">
+
+      <!-- Inputs -->
+      <div>
+        <div class="card card-glow-c">
+          <div class="card-label">Clinical Parameters</div>
+          <div class="inputs-grid">
+
+            <div class="field">
+              <div class="field-label">Pregnancies <span class="tip" data-tip="Number of times pregnant">?</span> <span class="range-hint">0–17</span></div>
+              <input type="number" id="c-pregnancies" min="0" max="17" placeholder="e.g. 2" oninput="syncR('c-pregnancies','cr-pregnancies',0,17)">
+              <input type="range" class="c" min="0" max="17" value="0" id="cr-pregnancies" oninput="syncN('c-pregnancies',this.value)">
+            </div>
+
+            <div class="field">
+              <div class="field-label">Glucose <span class="tip" data-tip="Plasma glucose (mg/dL)">?</span> <span class="range-hint">0–200</span></div>
+              <input type="number" id="c-glucose" min="0" max="200" placeholder="e.g. 120" oninput="syncR('c-glucose','cr-glucose',0,200)">
+              <input type="range" class="c" min="0" max="200" value="0" id="cr-glucose" oninput="syncN('c-glucose',this.value)">
+            </div>
+
+            <div class="field">
+              <div class="field-label">Blood Pressure <span class="tip" data-tip="Diastolic BP (mm Hg)">?</span> <span class="range-hint">0–122</span></div>
+              <input type="number" id="c-bp" min="0" max="122" placeholder="e.g. 72" oninput="syncR('c-bp','cr-bp',0,122)">
+              <input type="range" class="c" min="0" max="122" value="0" id="cr-bp" oninput="syncN('c-bp',this.value)">
+            </div>
+
+            <div class="field">
+              <div class="field-label">Skin Thickness <span class="tip" data-tip="Triceps skinfold (mm)">?</span> <span class="range-hint">0–99</span></div>
+              <input type="number" id="c-skin" min="0" max="99" placeholder="e.g. 20" oninput="syncR('c-skin','cr-skin',0,99)">
+              <input type="range" class="c" min="0" max="99" value="0" id="cr-skin" oninput="syncN('c-skin',this.value)">
+            </div>
+
+            <div class="field">
+              <div class="field-label">Insulin <span class="tip" data-tip="2-hr serum insulin (μU/mL)">?</span> <span class="range-hint">0–846</span></div>
+              <input type="number" id="c-insulin" min="0" max="846" placeholder="e.g. 80" oninput="syncR('c-insulin','cr-insulin',0,846)">
+              <input type="range" class="c" min="0" max="846" value="0" id="cr-insulin" oninput="syncN('c-insulin',this.value)">
+            </div>
+
+            <div class="field">
+              <div class="field-label">BMI <span class="tip" data-tip="Body mass index (kg/m²)">?</span> <span class="range-hint">0–67.1</span></div>
+              <input type="number" id="c-bmi" min="0" max="67.1" step="0.1" placeholder="e.g. 26.5" oninput="syncR('c-bmi','cr-bmi',0,67.1)">
+              <input type="range" class="c" min="0" max="67.1" step="0.1" value="0" id="cr-bmi" oninput="syncN('c-bmi',this.value)">
+            </div>
+
+            <div class="field">
+              <div class="field-label">DPF <span class="tip" data-tip="Diabetes Pedigree Function">?</span> <span class="range-hint">0.078–2.42</span></div>
+              <input type="number" id="c-dpf" min="0.078" max="2.42" step="0.001" placeholder="e.g. 0.627" oninput="syncR('c-dpf','cr-dpf',0.078,2.42)">
+              <input type="range" class="c" min="0.078" max="2.42" step="0.001" value="0.078" id="cr-dpf" oninput="syncN('c-dpf',this.value)">
+            </div>
+
+            <div class="field">
+              <div class="field-label">Age <span class="tip" data-tip="Patient age (years)">?</span> <span class="range-hint">21–81</span></div>
+              <input type="number" id="c-age" min="21" max="81" placeholder="e.g. 35" oninput="syncR('c-age','cr-age',21,81)">
+              <input type="range" class="c" min="21" max="81" value="21" id="cr-age" oninput="syncN('c-age',this.value)">
+            </div>
+
+          </div>
+          <div class="err-msg" id="c-err">Please fill in all fields with valid values before predicting.</div>
+          <button class="predict-btn c" onclick="runClinical()" id="btn-c">Run Clinical Prediction</button>
+          <button class="reset-btn" onclick="resetClinical()">↺ Reset</button>
+        </div>
+        <p class="disclaimer">⚠ For research use only. Not a substitute for professional medical diagnosis.</p>
+      </div>
+
+      <!-- Results -->
+      <div class="results-col">
+        <div class="card card-glow-c gauge-card">
+          <div class="card-label">Clinical Risk Score</div>
+          <div class="gauge-wrap">
+            <svg class="gauge-svg" viewBox="0 0 180 96">
+              <path class="g-track" d="M20 90 A70 70 0 0 1 160 90"/>
+              <path class="g-arc" id="g-c" stroke="var(--accent-c)" d="M20 90 A70 70 0 0 1 160 90"/>
+              <line id="n-c" x1="90" y1="90" x2="90" y2="28"
+                stroke="var(--accent-c)" stroke-width="2" stroke-linecap="round"
+                style="transform-origin:90px 90px;transform:rotate(-90deg)"/>
+              <circle cx="90" cy="90" r="4.5" fill="var(--accent-c)" id="nc-c"/>
+            </svg>
+          </div>
+          <div class="gauge-pct" id="pct-c" style="color:var(--accent-c)">—</div>
+          <div class="gauge-lbl">Probability Score</div>
+          <div class="risk-badge" id="badge-c">Awaiting Input</div>
+        </div>
+
+        <div class="card card-glow-c">
+          <div class="card-label">Feature Contribution</div>
+          <div class="bar-list" id="bars-c">
+            <div class="empty">Run prediction to see contributions</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-label">History</div>
+          <div class="history-list" id="hist-c">
+            <div class="empty">No predictions yet</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════
+       LIFESTYLE TAB
+  ═══════════════════════════════════════════ -->
+  <div class="section" id="tab-lifestyle">
+    <div class="main-grid">
+
+      <div>
+        <div class="card card-glow-l">
+          <div class="card-label">Lifestyle Parameters</div>
+
+          <!-- Gender + Age -->
+          <div class="inputs-grid" style="margin-bottom:18px">
+            <div class="field">
+              <div class="field-label">Gender</div>
+              <div class="gender-select">
+                <button class="gender-btn" id="g-male" onclick="setGender(1)">♂ Male</button>
+                <button class="gender-btn" id="g-female" onclick="setGender(0)">♀ Female</button>
+              </div>
+            </div>
+            <div class="field">
+              <div class="field-label">Age <span class="range-hint">1–100</span></div>
+              <input type="number" class="lf" id="l-age" min="1" max="100" placeholder="e.g. 45" oninput="syncR('l-age','lr-age',1,100)">
+              <input type="range" class="l" min="1" max="100" value="30" id="lr-age" oninput="syncN('l-age',this.value)">
+            </div>
+          </div>
+
+          <div class="card-label" style="margin-bottom:12px">Symptoms (toggle all that apply)</div>
+          <div class="toggles-grid">
+            <div class="toggle-field" onclick="toggle(this,'l-polyuria')" id="tf-polyuria">
+              <span class="toggle-name">Polyuria</span>
+              <div class="toggle-switch"></div>
+              <input type="hidden" id="l-polyuria" value="0">
+            </div>
+            <div class="toggle-field" onclick="toggle(this,'l-polydipsia')" id="tf-polydipsia">
+              <span class="toggle-name">Polydipsia</span>
+              <div class="toggle-switch"></div>
+              <input type="hidden" id="l-polydipsia" value="0">
+            </div>
+            <div class="toggle-field" onclick="toggle(this,'l-weightloss')" id="tf-weightloss">
+              <span class="toggle-name">Sudden Weight Loss</span>
+              <div class="toggle-switch"></div>
+              <input type="hidden" id="l-weightloss" value="0">
+            </div>
+            <div class="toggle-field" onclick="toggle(this,'l-weakness')" id="tf-weakness">
+              <span class="toggle-name">Weakness</span>
+              <div class="toggle-switch"></div>
+              <input type="hidden" id="l-weakness" value="0">
+            </div>
+            <div class="toggle-field" onclick="toggle(this,'l-polyphagia')" id="tf-polyphagia">
+              <span class="toggle-name">Polyphagia</span>
+              <div class="toggle-switch"></div>
+              <input type="hidden" id="l-polyphagia" value="0">
+            </div>
+            <div class="toggle-field" onclick="toggle(this,'l-thrush')" id="tf-thrush">
+              <span class="toggle-name">Genital Thrush</span>
+              <div class="toggle-switch"></div>
+              <input type="hidden" id="l-thrush" value="0">
+            </div>
+            <div class="toggle-field" onclick="toggle(this,'l-visual')" id="tf-visual">
+              <span class="toggle-name">Visual Blurring</span>
+              <div class="toggle-switch"></div>
+              <input type="hidden" id="l-visual" value="0">
+            </div>
+            <div class="toggle-field" onclick="toggle(this,'l-itching')" id="tf-itching">
+              <span class="toggle-name">Itching</span>
+              <div class="toggle-switch"></div>
+              <input type="hidden" id="l-itching" value="0">
+            </div>
+            <div class="toggle-field" onclick="toggle(this,'l-irritability')" id="tf-irritability">
+              <span class="toggle-name">Irritability</span>
+              <div class="toggle-switch"></div>
+              <input type="hidden" id="l-irritability" value="0">
+            </div>
+            <div class="toggle-field" onclick="toggle(this,'l-healing')" id="tf-healing">
+              <span class="toggle-name">Delayed Healing</span>
+              <div class="toggle-switch"></div>
+              <input type="hidden" id="l-healing" value="0">
+            </div>
+            <div class="toggle-field" onclick="toggle(this,'l-paresis')" id="tf-paresis">
+              <span class="toggle-name">Partial Paresis</span>
+              <div class="toggle-switch"></div>
+              <input type="hidden" id="l-paresis" value="0">
+            </div>
+            <div class="toggle-field" onclick="toggle(this,'l-stiffness')" id="tf-stiffness">
+              <span class="toggle-name">Muscle Stiffness</span>
+              <div class="toggle-switch"></div>
+              <input type="hidden" id="l-stiffness" value="0">
+            </div>
+            <div class="toggle-field" onclick="toggle(this,'l-alopecia')" id="tf-alopecia">
+              <span class="toggle-name">Alopecia</span>
+              <div class="toggle-switch"></div>
+              <input type="hidden" id="l-alopecia" value="0">
+            </div>
+            <div class="toggle-field" onclick="toggle(this,'l-obesity')" id="tf-obesity">
+              <span class="toggle-name">Obesity</span>
+              <div class="toggle-switch"></div>
+              <input type="hidden" id="l-obesity" value="0">
+            </div>
+          </div>
+
+          <div class="err-msg" id="l-err">Please select gender and enter age before predicting.</div>
+          <button class="predict-btn l" onclick="runLifestyle()" id="btn-l">Run Lifestyle Prediction</button>
+          <button class="reset-btn" onclick="resetLifestyle()">↺ Reset</button>
+        </div>
+        <p class="disclaimer">⚠ For research use only. Not a substitute for professional medical diagnosis.</p>
+      </div>
+
+      <!-- Results -->
+      <div class="results-col">
+        <div class="card card-glow-l gauge-card">
+          <div class="card-label">Lifestyle Risk Score</div>
+          <div class="gauge-wrap">
+            <svg class="gauge-svg" viewBox="0 0 180 96">
+              <path class="g-track" d="M20 90 A70 70 0 0 1 160 90"/>
+              <path class="g-arc" id="g-l" stroke="var(--accent-l)" d="M20 90 A70 70 0 0 1 160 90"/>
+              <line id="n-l" x1="90" y1="90" x2="90" y2="28"
+                stroke="var(--accent-l)" stroke-width="2" stroke-linecap="round"
+                style="transform-origin:90px 90px;transform:rotate(-90deg)"/>
+              <circle cx="90" cy="90" r="4.5" fill="var(--accent-l)"/>
+            </svg>
+          </div>
+          <div class="gauge-pct" id="pct-l" style="color:var(--accent-l)">—</div>
+          <div class="gauge-lbl">Probability Score</div>
+          <div class="risk-badge" id="badge-l" style="background:rgba(167,139,250,0.1);color:var(--accent-l);border-color:rgba(167,139,250,0.2)">Awaiting Input</div>
+        </div>
+
+        <div class="card card-glow-l">
+          <div class="card-label">Symptom Contribution</div>
+          <div class="bar-list" id="bars-l">
+            <div class="empty">Run prediction to see contributions</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-label">History</div>
+          <div class="history-list" id="hist-l">
+            <div class="empty">No predictions yet</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════
+       COMBINED TAB
+  ═══════════════════════════════════════════ -->
+  <div class="section" id="tab-combined">
+    <div class="main-grid">
+      <div>
+        <div class="card card-glow-e">
+          <div class="card-label">Combined Parameters — All Fields Required</div>
+
+          <div class="section-title">
+            <div class="dot-big" style="background:var(--accent-c);box-shadow:0 0 6px var(--accent-c)"></div>
+            Clinical
+          </div>
+          <div class="inputs-grid" style="margin-bottom:28px">
+            <div class="field">
+              <div class="field-label">Pregnancies <span class="range-hint">0–17</span></div>
+              <input type="number" id="e-pregnancies" min="0" max="17" placeholder="e.g. 2" oninput="syncR('e-pregnancies','er-pregnancies',0,17)">
+              <input type="range" class="c" min="0" max="17" value="0" id="er-pregnancies" oninput="syncN('e-pregnancies',this.value)">
+            </div>
+            <div class="field">
+              <div class="field-label">Glucose <span class="range-hint">0–200</span></div>
+              <input type="number" id="e-glucose" min="0" max="200" placeholder="e.g. 120" oninput="syncR('e-glucose','er-glucose',0,200)">
+              <input type="range" class="c" min="0" max="200" value="0" id="er-glucose" oninput="syncN('e-glucose',this.value)">
+            </div>
+            <div class="field">
+              <div class="field-label">Blood Pressure <span class="range-hint">0–122</span></div>
+              <input type="number" id="e-bp" min="0" max="122" placeholder="e.g. 72" oninput="syncR('e-bp','er-bp',0,122)">
+              <input type="range" class="c" min="0" max="122" value="0" id="er-bp" oninput="syncN('e-bp',this.value)">
+            </div>
+            <div class="field">
+              <div class="field-label">Skin Thickness <span class="range-hint">0–99</span></div>
+              <input type="number" id="e-skin" min="0" max="99" placeholder="e.g. 20" oninput="syncR('e-skin','er-skin',0,99)">
+              <input type="range" class="c" min="0" max="99" value="0" id="er-skin" oninput="syncN('e-skin',this.value)">
+            </div>
+            <div class="field">
+              <div class="field-label">Insulin <span class="range-hint">0–846</span></div>
+              <input type="number" id="e-insulin" min="0" max="846" placeholder="e.g. 80" oninput="syncR('e-insulin','er-insulin',0,846)">
+              <input type="range" class="c" min="0" max="846" value="0" id="er-insulin" oninput="syncN('e-insulin',this.value)">
+            </div>
+            <div class="field">
+              <div class="field-label">BMI <span class="range-hint">0–67.1</span></div>
+              <input type="number" id="e-bmi" min="0" max="67.1" step="0.1" placeholder="e.g. 26.5" oninput="syncR('e-bmi','er-bmi',0,67.1)">
+              <input type="range" class="c" min="0" max="67.1" step="0.1" value="0" id="er-bmi" oninput="syncN('e-bmi',this.value)">
+            </div>
+            <div class="field">
+              <div class="field-label">DPF <span class="range-hint">0.078–2.42</span></div>
+              <input type="number" id="e-dpf" min="0.078" max="2.42" step="0.001" placeholder="e.g. 0.627" oninput="syncR('e-dpf','er-dpf',0.078,2.42)">
+              <input type="range" class="c" min="0.078" max="2.42" step="0.001" value="0.078" id="er-dpf" oninput="syncN('e-dpf',this.value)">
+            </div>
+            <div class="field">
+              <div class="field-label">Age (clinical) <span class="range-hint">21–81</span></div>
+              <input type="number" id="e-age-c" min="21" max="81" placeholder="e.g. 35" oninput="syncR('e-age-c','er-age-c',21,81)">
+              <input type="range" class="c" min="21" max="81" value="21" id="er-age-c" oninput="syncN('e-age-c',this.value)">
+            </div>
+          </div>
+
+          <div class="section-title">
+            <div class="dot-big" style="background:var(--accent-l);box-shadow:0 0 6px var(--accent-l)"></div>
+            Lifestyle
+          </div>
+          <div class="inputs-grid" style="margin-bottom:18px">
+            <div class="field">
+              <div class="field-label">Gender</div>
+              <div class="gender-select">
+                <button class="gender-btn" id="eg-male" onclick="setGenderE(1)">♂ Male</button>
+                <button class="gender-btn" id="eg-female" onclick="setGenderE(0)">♀ Female</button>
+              </div>
+            </div>
+            <div class="field">
+              <div class="field-label">Age (lifestyle) <span class="range-hint">1–100</span></div>
+              <input type="number" class="lf" id="e-age-l" min="1" max="100" placeholder="e.g. 45" oninput="syncR('e-age-l','er-age-l',1,100)">
+              <input type="range" class="l" min="1" max="100" value="30" id="er-age-l" oninput="syncN('e-age-l',this.value)">
+            </div>
+          </div>
+          <div class="toggles-grid">
+            <div class="toggle-field" onclick="toggle(this,'e-polyuria')"><span class="toggle-name">Polyuria</span><div class="toggle-switch"></div><input type="hidden" id="e-polyuria" value="0"></div>
+            <div class="toggle-field" onclick="toggle(this,'e-polydipsia')"><span class="toggle-name">Polydipsia</span><div class="toggle-switch"></div><input type="hidden" id="e-polydipsia" value="0"></div>
+            <div class="toggle-field" onclick="toggle(this,'e-weightloss')"><span class="toggle-name">Sudden Weight Loss</span><div class="toggle-switch"></div><input type="hidden" id="e-weightloss" value="0"></div>
+            <div class="toggle-field" onclick="toggle(this,'e-weakness')"><span class="toggle-name">Weakness</span><div class="toggle-switch"></div><input type="hidden" id="e-weakness" value="0"></div>
+            <div class="toggle-field" onclick="toggle(this,'e-polyphagia')"><span class="toggle-name">Polyphagia</span><div class="toggle-switch"></div><input type="hidden" id="e-polyphagia" value="0"></div>
+            <div class="toggle-field" onclick="toggle(this,'e-thrush')"><span class="toggle-name">Genital Thrush</span><div class="toggle-switch"></div><input type="hidden" id="e-thrush" value="0"></div>
+            <div class="toggle-field" onclick="toggle(this,'e-visual')"><span class="toggle-name">Visual Blurring</span><div class="toggle-switch"></div><input type="hidden" id="e-visual" value="0"></div>
+            <div class="toggle-field" onclick="toggle(this,'e-itching')"><span class="toggle-name">Itching</span><div class="toggle-switch"></div><input type="hidden" id="e-itching" value="0"></div>
+            <div class="toggle-field" onclick="toggle(this,'e-irritability')"><span class="toggle-name">Irritability</span><div class="toggle-switch"></div><input type="hidden" id="e-irritability" value="0"></div>
+            <div class="toggle-field" onclick="toggle(this,'e-healing')"><span class="toggle-name">Delayed Healing</span><div class="toggle-switch"></div><input type="hidden" id="e-healing" value="0"></div>
+            <div class="toggle-field" onclick="toggle(this,'e-paresis')"><span class="toggle-name">Partial Paresis</span><div class="toggle-switch"></div><input type="hidden" id="e-paresis" value="0"></div>
+            <div class="toggle-field" onclick="toggle(this,'e-stiffness')"><span class="toggle-name">Muscle Stiffness</span><div class="toggle-switch"></div><input type="hidden" id="e-stiffness" value="0"></div>
+            <div class="toggle-field" onclick="toggle(this,'e-alopecia')"><span class="toggle-name">Alopecia</span><div class="toggle-switch"></div><input type="hidden" id="e-alopecia" value="0"></div>
+            <div class="toggle-field" onclick="toggle(this,'e-obesity')"><span class="toggle-name">Obesity</span><div class="toggle-switch"></div><input type="hidden" id="e-obesity" value="0"></div>
+          </div>
+
+          <div class="err-msg" id="e-err">Please fill in all clinical fields, select gender, and enter age.</div>
+          <button class="predict-btn e" onclick="runCombined()" id="btn-e">⚡ Run Combined Prediction</button>
+          <button class="reset-btn" onclick="resetCombined()">↺ Reset</button>
+        </div>
+        <p class="disclaimer">⚠ For research use only. Not a substitute for professional medical diagnosis.</p>
+      </div>
+
+      <!-- Combined results -->
+      <div class="results-col">
+        <!-- Dual mini scores -->
+        <div class="card card-glow-e">
+          <div class="card-label">Individual Model Scores</div>
+          <div class="dual-scores">
+            <div class="score-box">
+              <div class="score-box-label">Clinical</div>
+              <div class="score-box-val" id="e-pct-c" style="color:var(--accent-c)">—</div>
+              <div class="score-box-tag" id="e-tag-c" style="color:var(--muted)">—</div>
+            </div>
+            <div class="score-box">
+              <div class="score-box-label">Lifestyle</div>
+              <div class="score-box-val" id="e-pct-l" style="color:var(--accent-l)">—</div>
+              <div class="score-box-tag" id="e-tag-l" style="color:var(--muted)">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ensemble gauge -->
+        <div class="card card-glow-e gauge-card">
+          <div class="card-label">Ensemble Score (Average)</div>
+          <div class="gauge-wrap">
+            <svg class="gauge-svg" viewBox="0 0 180 96">
+              <path class="g-track" d="M20 90 A70 70 0 0 1 160 90"/>
+              <path class="g-arc" id="g-e" stroke="var(--accent-e)" d="M20 90 A70 70 0 0 1 160 90"/>
+              <line id="n-e" x1="90" y1="90" x2="90" y2="28"
+                stroke="var(--accent-e)" stroke-width="2" stroke-linecap="round"
+                style="transform-origin:90px 90px;transform:rotate(-90deg)"/>
+              <circle cx="90" cy="90" r="4.5" fill="var(--accent-e)"/>
+            </svg>
+          </div>
+          <div class="gauge-pct" id="pct-e" style="color:var(--accent-e)">—</div>
+          <div class="gauge-lbl">Combined Probability</div>
+          <div class="risk-badge" id="badge-e" style="background:rgba(52,211,153,0.1);color:var(--accent-e);border-color:rgba(52,211,153,0.2)">Awaiting Input</div>
+        </div>
+
+        <div class="card">
+          <div class="card-label">Combined History</div>
+          <div class="history-list" id="hist-e">
+            <div class="empty">No predictions yet</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const API = window.location.origin;  // works both locally and on Vercel
+let genderVal = null;
+let genderValE = null;
+let histCnt = {c:0, l:0, e:0};
+
+// ── Tab switch ──
+function switchTab(tab) {
+  ['clinical','lifestyle','combined'].forEach(t => {
+    document.getElementById('tab-'+t).classList.toggle('visible', t===tab);
+  });
+  document.querySelectorAll('.tab').forEach((el,i) => {
+    const names = ['clinical','lifestyle','combined'];
+    const colors = ['active-c','active-l','active-e'];
+    el.className = 'tab' + (names[i]===tab ? ' '+colors[i] : '');
+  });
+}
+
+// ── Slider sync ──
+function syncR(nid, rid, mn, mx) {
+  const v = parseFloat(document.getElementById(nid).value);
+  if (!isNaN(v)) document.getElementById(rid).value = Math.min(Math.max(v,mn),mx);
+  document.getElementById(nid).classList.toggle('filled', !isNaN(v));
+}
+function syncN(nid, val) {
+  document.getElementById(nid).value = val;
+  document.getElementById(nid).classList.add('filled');
+}
+
+// ── Toggle ──
+function toggle(el, hidId) {
+  el.classList.toggle('on');
+  document.getElementById(hidId).value = el.classList.contains('on') ? '1' : '0';
+}
+
+// ── Gender ──
+function setGender(val) {
+  genderVal = val;
+  document.getElementById('g-male').className = 'gender-btn' + (val===1?' active-male':'');
+  document.getElementById('g-female').className = 'gender-btn' + (val===0?' active-female':'');
+}
+function setGenderE(val) {
+  genderValE = val;
+  document.getElementById('eg-male').className = 'gender-btn' + (val===1?' active-male':'');
+  document.getElementById('eg-female').className = 'gender-btn' + (val===0?' active-female':'');
+}
+
+// ── Risk helpers ──
+function riskColor(p) {
+  return p < 0.35 ? 'var(--accent-c)' : p < 0.65 ? 'var(--warn)' : 'var(--danger)';
+}
+function riskLabel(p) {
+  return p < 0.35 ? 'Low Risk' : p < 0.65 ? 'Moderate Risk' : 'High Risk';
+}
+
+// ── Update gauge ──
+function updateGauge(arcId, needleId, pctId, badgeId, prob, accentVar) {
+  const color = riskColor(prob);
+  const pct = Math.round(prob * 100);
+  document.getElementById(arcId).style.strokeDashoffset = 220 - prob * 220;
+  document.getElementById(arcId).style.stroke = color;
+  document.getElementById(needleId).style.transform = `rotate(${-90 + prob*180}deg)`;
+  document.getElementById(needleId).style.stroke = color;
+  document.getElementById(pctId).textContent = pct + '%';
+  document.getElementById(pctId).style.color = color;
+  const badge = document.getElementById(badgeId);
+  badge.textContent = riskLabel(prob);
+  badge.style.color = color;
+  badge.style.background = `rgba(${colorRgb(prob)},0.1)`;
+  badge.style.borderColor = `rgba(${colorRgb(prob)},0.2)`;
+}
+
+function colorRgb(p) {
+  return p < 0.35 ? '56,189,248' : p < 0.65 ? '251,191,36' : '248,113,113';
+}
+
+// ── Feature bars ──
+function updateBars(containerId, items, color) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  items.forEach((item, i) => {
+    const pct = Math.round(item.w * 100);
+    const c = item.w > 0.65 ? 'var(--danger)' : item.w > 0.35 ? 'var(--warn)' : color;
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    row.innerHTML = `
+      <div class="bar-name">${item.n}</div>
+      <div class="bar-bg"><div class="bar-fill" style="background:${c}" id="bf-${containerId}-${i}"></div></div>
+      <div class="bar-pct">${pct}%</div>`;
+    el.appendChild(row);
+    setTimeout(() => {
+      document.getElementById(`bf-${containerId}-${i}`).style.width = pct + '%';
+    }, 80 + i * 50);
+  });
+}
+
+// ── History ──
+function addHistory(listId, label, pct, color, extra) {
+  const list = document.getElementById(listId);
+  if (list.querySelector('.empty')) list.innerHTML = '';
+  histCnt[label]++;
+  const item = document.createElement('div');
+  item.className = 'h-item';
+  item.innerHTML = `<span style="color:var(--muted)">#${Object.values(histCnt).reduce((a,b)=>a+b,0)} · ${extra} · ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span><span class="h-tag" style="color:${color}">${pct}% ${riskLabel(pct/100)}</span>`;
+  list.prepend(item);
+}
+
+// ── Loading state ──
+function setLoading(btnId, on) {
+  const btn = document.getElementById(btnId);
+  btn.classList.toggle('loading', on);
+  btn.style.pointerEvents = on ? 'none' : '';
+}
+
+// ── Check model status ──
+async function checkStatus() {
+  try {
+    const res = await fetch(API + '/status');
+    const d = await res.json();
+    const banner = document.getElementById('model-banner');
+
+    const updateDot = (dotId, txtId, loaded, label) => {
+      const dot = document.getElementById(dotId);
+      const txt = document.getElementById(txtId);
+      dot.className = 'dot ' + (loaded ? (dotId.includes('c') ? 'dot-c' : 'dot-l') : 'dot-off');
+      txt.textContent = label + (loaded ? '' : ' ✗');
+    };
+
+    updateDot('status-c-dot','status-c-txt', d.clinical_model_loaded, 'Clinical');
+    updateDot('status-l-dot','status-l-txt', d.lifestyle_model_loaded, 'Lifestyle');
+
+    if (d.clinical_model_loaded && d.lifestyle_model_loaded) {
+      banner.className = 'banner ok';
+      banner.textContent = '✓ Both models loaded and ready';
+    } else if (d.clinical_model_loaded || d.lifestyle_model_loaded) {
+      banner.className = 'banner warn';
+      banner.textContent = '⚠ Only one model loaded — combined predictions unavailable';
+    }
+  } catch {
+    // server not running — keep default warning banner
+  }
+}
+
+// ── Clinical Prediction ──
+async function runClinical() {
+  const fields = ['c-pregnancies','c-glucose','c-bp','c-skin','c-insulin','c-bmi','c-dpf','c-age'];
+  const vals = fields.map(id => parseFloat(document.getElementById(id).value));
+  if (vals.some(isNaN)) { document.getElementById('c-err').style.display='block'; return; }
+  document.getElementById('c-err').style.display='none';
+
+  setLoading('btn-c', true);
+
+  try {
+    const res = await fetch(API + '/predict/clinical', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        pregnancies: vals[0], glucose: vals[1], blood_pressure: vals[2],
+        skin_thickness: vals[3], insulin: vals[4], bmi: vals[5],
+        dpf: vals[6], age: vals[7]
+      })
+    });
+    const d = await res.json();
+    if (d.error) throw new Error(d.error);
+    const prob = d.probability;
+    updateGauge('g-c','n-c','pct-c','badge-c', prob, 'var(--accent-c)');
+    updateBars('bars-c', [
+      {n:'Glucose',   w: vals[1]/200},
+      {n:'BMI',       w: vals[5]/67.1},
+      {n:'Age',       w: (vals[7]-21)/60},
+      {n:'DPF',       w: (vals[6]-0.078)/2.342},
+      {n:'Insulin',   w: vals[4]/846},
+      {n:'Preg.',     w: vals[0]/17},
+      {n:'Blood Pr.', w: vals[2]/122},
+      {n:'Skin Th.',  w: vals[3]/99},
+    ].sort((a,b)=>b.w-a.w), 'var(--accent-c)');
+    addHistory('hist-c','c', Math.round(prob*100), riskColor(prob), `age ${vals[7]}`);
+  } catch(err) {
+    document.getElementById('c-err').textContent = '⚠ ' + err.message;
+    document.getElementById('c-err').style.display='block';
+  }
+  setLoading('btn-c', false);
+}
+
+// ── Lifestyle Prediction ──
+async function runLifestyle() {
+  const age = parseFloat(document.getElementById('l-age').value);
+  if (genderVal === null || isNaN(age)) {
+    document.getElementById('l-err').style.display='block'; return;
+  }
+  document.getElementById('l-err').style.display='none';
+
+  setLoading('btn-l', true);
+  const g = id => parseInt(document.getElementById(id).value);
+
+  try {
+    const res = await fetch(API + '/predict/lifestyle', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        gender: genderVal, polyuria: g('l-polyuria'), polydipsia: g('l-polydipsia'),
+        weight_loss: g('l-weightloss'), weakness: g('l-weakness'), polyphagia: g('l-polyphagia'),
+        genital_thrush: g('l-thrush'), visual_blurring: g('l-visual'), itching: g('l-itching'),
+        irritability: g('l-irritability'), delayed_healing: g('l-healing'), partial_paresis: g('l-paresis'),
+        muscle_stiffness: g('l-stiffness'), alopecia: g('l-alopecia'), obesity: g('l-obesity'), age
+      })
+    });
+    const d = await res.json();
+    if (d.error) throw new Error(d.error);
+    const prob = d.probability;
+    updateGauge('g-l','n-l','pct-l','badge-l', prob, 'var(--accent-l)');
+    const symptoms = [
+      {n:'Polyuria', w:g('l-polyuria')},{n:'Polydipsia',w:g('l-polydipsia')},
+      {n:'Wt. Loss',w:g('l-weightloss')},{n:'Weakness',w:g('l-weakness')},
+      {n:'Polyphagia',w:g('l-polyphagia')},{n:'G. Thrush',w:g('l-thrush')},
+      {n:'Vis. Blur',w:g('l-visual')},{n:'Itching',w:g('l-itching')},
+      {n:'Irritability',w:g('l-irritability')},{n:'Del. Healing',w:g('l-healing')},
+      {n:'Paresis',w:g('l-paresis')},{n:'Muscle St.',w:g('l-stiffness')},
+      {n:'Alopecia',w:g('l-alopecia')},{n:'Obesity',w:g('l-obesity')},
+    ].sort((a,b)=>b.w-a.w).slice(0,8);
+    updateBars('bars-l', symptoms, 'var(--accent-l)');
+    addHistory('hist-l','l', Math.round(prob*100), riskColor(prob), `age ${age}`);
+  } catch(err) {
+    document.getElementById('l-err').textContent = '⚠ ' + err.message;
+    document.getElementById('l-err').style.display='block';
+  }
+  setLoading('btn-l', false);
+}
+
+// ── Combined Prediction ──
+async function runCombined() {
+  const cFields = ['e-pregnancies','e-glucose','e-bp','e-skin','e-insulin','e-bmi','e-dpf','e-age-c'];
+  const cVals = cFields.map(id => parseFloat(document.getElementById(id).value));
+  const lAge = parseFloat(document.getElementById('e-age-l').value);
+  if (cVals.some(isNaN) || genderValE === null || isNaN(lAge)) {
+    document.getElementById('e-err').style.display='block'; return;
+  }
+  document.getElementById('e-err').style.display='none';
+
+  setLoading('btn-e', true);
+  const g = id => parseInt(document.getElementById(id).value);
+
+  try {
+    const res = await fetch(API + '/predict/combined', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        pregnancies: cVals[0], glucose: cVals[1], blood_pressure: cVals[2],
+        skin_thickness: cVals[3], insulin: cVals[4], bmi: cVals[5],
+        dpf: cVals[6], age: cVals[7],
+        gender: genderValE, polyuria: g('e-polyuria'), polydipsia: g('e-polydipsia'),
+        weight_loss: g('e-weightloss'), weakness: g('e-weakness'), polyphagia: g('e-polyphagia'),
+        genital_thrush: g('e-thrush'), visual_blurring: g('e-visual'), itching: g('e-itching'),
+        irritability: g('e-irritability'), delayed_healing: g('e-healing'), partial_paresis: g('e-paresis'),
+        muscle_stiffness: g('e-stiffness'), alopecia: g('e-alopecia'), obesity: g('e-obesity'),
+        age_lifestyle: lAge
+      })
+    });
+    const d = await res.json();
+    if (d.error) throw new Error(d.error);
+
+    const cp = d.clinical.probability, lp = d.lifestyle.probability, ep = d.combined.probability;
+
+    // individual boxes
+    document.getElementById('e-pct-c').textContent = Math.round(cp*100)+'%';
+    document.getElementById('e-pct-c').style.color = riskColor(cp);
+    document.getElementById('e-tag-c').textContent = riskLabel(cp);
+    document.getElementById('e-tag-c').style.color = riskColor(cp);
+    document.getElementById('e-pct-l').textContent = Math.round(lp*100)+'%';
+    document.getElementById('e-pct-l').style.color = riskColor(lp);
+    document.getElementById('e-tag-l').textContent = riskLabel(lp);
+    document.getElementById('e-tag-l').style.color = riskColor(lp);
+
+    updateGauge('g-e','n-e','pct-e','badge-e', ep, 'var(--accent-e)');
+    addHistory('hist-e','e', Math.round(ep*100), riskColor(ep), `C:${Math.round(cp*100)}% L:${Math.round(lp*100)}%`);
+  } catch(err) {
+    document.getElementById('e-err').textContent = '⚠ ' + err.message;
+    document.getElementById('e-err').style.display='block';
+  }
+  setLoading('btn-e', false);
+}
+
+// ── Resets ──
+function resetClinical() {
+  ['c-pregnancies','c-glucose','c-bp','c-skin','c-insulin','c-bmi','c-dpf','c-age'].forEach(id => {
+    document.getElementById(id).value='';
+    document.getElementById(id).classList.remove('filled');
+  });
+  document.getElementById('c-err').style.display='none';
+}
+
+function resetLifestyle() {
+  genderVal=null;
+  document.getElementById('g-male').className='gender-btn';
+  document.getElementById('g-female').className='gender-btn';
+  document.getElementById('l-age').value='';
+  document.querySelectorAll('#tab-lifestyle .toggle-field').forEach(el=>{
+    el.classList.remove('on');
+  });
+  ['l-polyuria','l-polydipsia','l-weightloss','l-weakness','l-polyphagia','l-thrush',
+   'l-visual','l-itching','l-irritability','l-healing','l-paresis','l-stiffness','l-alopecia','l-obesity'].forEach(id=>{
+    document.getElementById(id).value='0';
+  });
+  document.getElementById('l-err').style.display='none';
+}
+
+function resetCombined() { resetClinical(); resetLifestyle(); }
+
+// Check status on load
+checkStatus();
+</script>
+</body>
+</html>
